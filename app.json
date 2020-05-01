@@ -1,0 +1,6 @@
+{
+    "name": "Simple Posgtres Heroku app",
+    "description": "Super simple Heroku app in node.js using Postgres",
+    "success_url": "/",
+    "addons": ["heroku-postgresql:hobby-dev", "papertrail:choklad"]
+  }
