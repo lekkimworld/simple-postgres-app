@@ -1,7 +1,7 @@
-# simple-postgres-heroku-app
-Super simple demo counter-app using Postgres for state for Heroku.
+# Simple Postgres App
+Super simple demo counter-app using Postgres for state used to demonstrate deployment to Heroku and Azure.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/lekkimworld/simple-postgres-heroku-app)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/lekkimworld/simple-postgres-app)
 
 ## Configuration ##
 Create the following environment variables:
@@ -11,9 +11,9 @@ Setting `DEBUG_APP_LOAD` will not load any Postgres dependencies but only show c
 
 ## Deployment to Heroku ##
 
-#### Proivision compute and push app ####
+#### Provision compute and push app ####
 ```
-export HEROKU_APP_NAME=simple-redis-heroku-$(date +%s)
+export HEROKU_APP_NAME=my-postgres-demo-$(date +%s)
 export HEROKU_DB_SKU=hobby-dev
 
 heroku apps:create --region eu $HEROKU_APP_NAME
