@@ -1,8 +1,6 @@
 # Simple Postgres App
 Super simple demo counter-app using Postgres for state used to demonstrate deployment to Heroku and Azure.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/lekkimworld/simple-postgres-app)
-
 ## Configuration ##
 Create the following environment variables:
 * `DATABASE_URL` posgres:// like URL to connect to Postgres instance or connection string
@@ -10,12 +8,16 @@ Create the following environment variables:
 Setting `DEBUG_APP_LOAD` will not load any Postgres dependencies but only show configured environment variables.
 
 ## Deployment to Heroku ##
+By far the easiest approach to deploying on Heroku is simply using the below button. If will create the app on Heroku and deploy the source directly from Github.
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/lekkimworld/simple-postgres-app)
 
 #### Provision compute and push app ####
 ```
 export HEROKU_APP_NAME=my-postgres-demo-$(date +%s)
 export HEROKU_DB_SKU=hobby-dev
 
+# create app - if the local directory is a git repo we automatically set a remote
 heroku apps:create --region eu $HEROKU_APP_NAME
 heroku addons:create --app $HEROKU_APP_NAME heroku-postgresql:$HEROKU_DB_SKU
 git push heroku master
@@ -28,11 +30,12 @@ heroku apps:destroy --app $HEROKU_APP_NAME --confirm $HEROKU_APP_NAME
 ```
 
 ## Deployment to Azure ##
+The below steps gives you the option to either deploy the source directly from Github or to push the source from a local git repository.
 
 #### Provision compute on Azure #####
 ```
-export AZ_APP_PREFIX='my-postgres-demo'
-export AZ_LOCATION='northeurope'
+export AZ_APP_PREFIX=my-postgres-demo-$(date +%s)
+export AZ_LOCATION=northeurope
 export AZ_POSTGRES_USERNAME=mypostgresuser
 export AZ_POSTGRES_PASSWORD=t@7Yg9F2BTB8d04C
 export AZ_DB_SERVER_SKU=B_Gen5_1
@@ -48,7 +51,7 @@ az postgres db create --name "$AZ_DB_NAME" --resource-group "$AZ_APP_PREFIX-reso
 
 # create an app service plan (the compute) and the app service (webapp) in the plan
 az appservice plan create --name "$AZ_APP_PREFIX-appplan" --resource-group "$AZ_APP_PREFIX-resourcegroup" --is-linux --location "$AZ_LOCATION" --sku $AZ_APPSERVICE_SKU --number-of-workers 1
-az webapp create --name "$AZ_APP_PREFIX-appservice" --resource-group "$AZ_APP_PREFIX-resourcegroup" --plan "$AZ_APP_PREFIX-appplan" --runtime "node|10.14" --deployment-local-git
+az webapp create --name "$AZ_APP_PREFIX-appservice" --resource-group "$AZ_APP_PREFIX-resourcegroup" --plan "$AZ_APP_PREFIX-appplan" --runtime "node|10.14"
 
 # get database instance url and set webapp settings
 export AZ_DB_DOMAIN=`az postgres server show --name "$AZ_APP_PREFIX-postgres" --resource-group "$AZ_APP_PREFIX-resourcegroup" | jq ".fullyQualifiedDomainName" -r`
@@ -68,10 +71,12 @@ Oops! Something went wrong!
 no pg_hba.conf entry for host "137.116.253.47", user "mypostgresuser", database "mydb", SSL on
 ```
 
-
 #### Deploy source to Azure from local git repo ####
 ```
-# get git remote for deployment
+# configure webapp for local git
+az webapp deployment source config-local-git --name "$AZ_APP_PREFIX-appservice" --resource-group "$AZ_APP_PREFIX-resourcegroup"
+
+# compute git remote for deployment, set on local repo and push
 export AZ_GIT_URL=`az webapp deployment list-publishing-credentials --name "$AZ_APP_PREFIX-appservice" --resource-group "$AZ_APP_PREFIX-resourcegroup" --query scmUri --output tsv`/$AZ_APP_PREFIX-appservice.git
 git remote add azure $AZ_GIT_URL
 git push azure master
@@ -80,7 +85,7 @@ git push azure master
 #### Deploy source to Azure from Github ####
 ```
 # deploy source from github
-az webapp deployment source config --name "$AZ_APP_PREFIX-appservice" --resource-group "$AZ_APP_PREFIX-resourcegroup" --repo-url https://github.com/lekkimworld/simple-postgres-heroku-app.git --branch master
+az webapp deployment source config --name "$AZ_APP_PREFIX-appservice" --resource-group "$AZ_APP_PREFIX-resourcegroup" --repo-url https://github.com/lekkimworld/simple-postgres-app.git --branch master
 ```
 
 #### Open app on Azure ####
@@ -88,6 +93,11 @@ az webapp deployment source config --name "$AZ_APP_PREFIX-appservice" --resource
 # get hostname
 export AZ_HOSTNAME=`az webapp show --name "$AZ_APP_PREFIX-appservice" --resource-group "$AZ_APP_PREFIX-resourcegroup"  | jq ".hostNames[0]" -r`
 open "https://$AZ_HOSTNAME"
+```
+
+#### Scale out/in on Azure ####
+```
+az appservice plan update --name "$AZ_APP_PREFIX-appplan" --resource-group "$AZ_APP_PREFIX-resourcegroup" --number-of-workers 1
 ```
 
 ## Destroy services on Azure ##
